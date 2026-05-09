@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Black Background -->
+  <rect width="100" height="100" fill="#000000" rx="20" ry="20" />
+  <!-- Wallet Icon -->
+  <g transform="scale(2.5) translate(8, 8)" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+    <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+  </g>
+</svg>
