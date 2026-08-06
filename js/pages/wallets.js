@@ -1,66 +1,82 @@
 // ========================================
-// MyWallet — Wallets Page
+// MyWallet — Wallets Page (Verdant Glass)
 // ========================================
 
 function renderWallets(container) {
   const wallets = Store.getWallets();
   const total = Store.getTotalBalance();
 
-  const grouped = {
-    bank: wallets.filter(w => w.type === 'bank'),
-    ewallet: wallets.filter(w => w.type === 'ewallet'),
-    cash: wallets.filter(w => w.type === 'cash'),
-  };
-
   container.innerHTML = `
-    <!-- Total -->
-    <div class="card card--hero section" style="animation:fadeInUp .5s var(--ease-out)">
-      <div class="card__title">Total Saldo Gabungan</div>
-      <div class="card__value mono">${Utils.formatRupiah(total)}</div>
-      <div class="card__subtitle">${wallets.length} dompet aktif</div>
-    </div>
-
-    <!-- Actions -->
-    <div style="display:flex;gap:8px;margin-bottom:var(--space-lg);flex-wrap:wrap;animation:fadeInUp .6s var(--ease-out)">
-      <button class="btn btn--primary btn--sm" id="add-wallet-btn">${Icons.plus} Tambah Dompet</button>
-      <button class="btn btn--secondary btn--sm" id="transfer-btn">${Icons.transfer} Transfer</button>
-    </div>
-
-    <!-- Wallet Groups -->
-    ${Object.entries(grouped).map(([type, wList]) => `
-      <div class="section" style="animation:fadeInUp .7s var(--ease-out)">
-        <div class="section__header">
-          <h3 class="section__title">${WALLET_TYPES[type].icon} ${WALLET_TYPES[type].name}</h3>
+    <!-- Header Section -->
+    <div class="wallets-header" style="animation:fadeInUp .35s var(--ease-out)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h2 class="page-header__title">${t('walletsTitle')}</h2>
+          <p class="page-header__subtitle">${t('walletsSubtitle')}</p>
         </div>
-        <div class="grid-auto">
-          ${wList.map((w, i) => `
-            <div class="wallet-card stagger-${(i % 5) + 1}" data-wallet-id="${w.id}">
-              <div class="wallet-card__header">
-                <div class="wallet-card__icon-wrap" style="background:${w.color || 'var(--accent-primary)'}40;">
-                  ${getWalletIcon(w)}
-                </div>
-                <div class="wallet-card__type">${WALLET_TYPES[type].name}</div>
-              </div>
-              <div class="wallet-card__name">${Utils.escapeHtml(w.name)}</div>
-              <div class="wallet-card__balance mono">${Utils.formatRupiah(w.balance)}</div>
-            </div>
-          `).join('')}
-          <div class="wallet-card wallet-card--add" data-add-type="${type}">
-            ${Icons.plus}
-            <span>Tambah ${WALLET_TYPES[type].name}</span>
-          </div>
+        <div class="wallets-header__actions">
+          <button class="btn btn--secondary" id="transfer-btn">${mIcon('sync_alt')} ${t('transfer')}</button>
+          <button class="btn btn--primary" id="add-wallet-btn">${mIcon('add')} ${t('addWallet')}</button>
         </div>
       </div>
-    `).join('')}
+    </div>
+
+    <!-- Total Balance Bento Card -->
+    <div class="wallet-total-card section" style="animation:fadeInUp .4s var(--ease-out);max-width:380px;">
+      <div class="wallet-total-card__label">${mIcon('account_balance')} ${t('totalCombinedBalance')}</div>
+      <div class="wallet-total-card__value">Rp ${new Intl.NumberFormat('id-ID').format(total)}</div>
+      <div class="wallet-total-card__trend">
+        ${mIcon('trending_up')} ${wallets.length} ${t('activeAccounts')}
+      </div>
+    </div>
+
+    <!-- Active Accounts Section -->
+    <div class="section" style="animation:fadeInUp .45s var(--ease-out)">
+      <h3 style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--on-surface);margin-bottom:16px;padding:0 8px;">${t('activeAccounts')}</h3>
+      <div class="grid-auto">
+        ${wallets.map(w => {
+          const typeLabel = (WALLET_TYPES[w.type] || { name: 'OTHER' }).name.toUpperCase();
+          let blobBg = 'rgba(0,91,170,0.1)';
+          let iconColor = '#005baa';
+          if (w.type === 'ewallet') { blobBg = 'rgba(76,52,148,0.1)'; iconColor = '#4c3494'; }
+          if (w.type === 'cash') { blobBg = 'rgba(0,69,13,0.1)'; iconColor = 'var(--primary)'; }
+
+          return `
+            <div class="wallet-card" data-wallet-id="${w.id}">
+              <div class="wallet-card__bg-blob" style="background:${blobBg};"></div>
+              <div class="wallet-card__top">
+                <div class="wallet-card__top-left">
+                  <div class="wallet-card__icon">
+                    <span style="color:${iconColor};">${getWalletIcon(w)}</span>
+                  </div>
+                  <div>
+                    <div class="wallet-card__name">${Utils.escapeHtml(w.name)}</div>
+                    <span class="wallet-card__type">${typeLabel}</span>
+                  </div>
+                </div>
+                <button class="wallet-card__menu">${mIcon('more_vert')}</button>
+              </div>
+              <div class="wallet-card__bottom">
+                <div class="wallet-card__balance-label">${t('balance')}</div>
+                <div class="wallet-card__balance">${Utils.formatRupiah(w.balance)}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+        
+        <!-- Add New Wallet Card -->
+        <div class="wallet-card wallet-card--add" id="card-add-wallet">
+          ${mIcon('add_circle')}
+          <span>Create New Wallet</span>
+        </div>
+      </div>
+    </div>
   `;
 
   // Events
   container.querySelector('#add-wallet-btn').addEventListener('click', () => openAddWalletForm());
   container.querySelector('#transfer-btn').addEventListener('click', () => openTransferForm());
-
-  container.querySelectorAll('.wallet-card--add').forEach(card => {
-    card.addEventListener('click', () => openAddWalletForm(card.dataset.addType));
-  });
+  container.querySelector('#card-add-wallet').addEventListener('click', () => openAddWalletForm());
 
   container.querySelectorAll('.wallet-card:not(.wallet-card--add)').forEach(card => {
     card.addEventListener('click', () => {
@@ -71,16 +87,16 @@ function renderWallets(container) {
 
       Modal.open(`${Utils.escapeHtml(w.name)}`, `
         <div style="text-align:center;margin-bottom:20px;">
-          <div class="mono" style="font-size:var(--fs-2xl);font-weight:700;">${Utils.formatRupiah(w.balance)}</div>
-          <div class="text-muted" style="margin-top:4px;">${WALLET_TYPES[w.type].name}</div>
+          <div class="mono" style="font-size:var(--fs-2xl);font-weight:700;color:var(--primary);">${Utils.formatRupiah(w.balance)}</div>
+          <div style="font-size:12px;color:var(--outline);margin-top:4px;font-weight:700;text-transform:uppercase;">${(WALLET_TYPES[w.type] || {}).name}</div>
         </div>
         <div class="divider"></div>
-        <h4 style="margin-bottom:12px;">Riwayat Transaksi</h4>
-        ${txs.length === 0 ? '<p class="text-muted">Belum ada transaksi</p>' :
+        <h4 style="margin-bottom:12px;font-size:14px;font-weight:600;color:var(--on-surface);">Riwayat Transaksi</h4>
+        ${txs.length === 0 ? '<p style="color:var(--outline);font-size:var(--fs-sm);">Belum ada transaksi</p>' :
           txs.map(tx => renderTxRow(tx)).join('')}
       `, {
         footerHtml: `
-          <button class="btn btn--danger btn--sm" id="modal-del-wallet">🗑️ Hapus</button>
+          <button class="btn btn--danger btn--sm" id="modal-del-wallet">${mIcon('delete')} Hapus</button>
           <button class="btn btn--secondary btn--sm" onclick="Modal.close()">Tutup</button>
         `,
         onOpen() {
@@ -137,7 +153,7 @@ function openAddWalletForm(preType = '') {
         Store.addWallet({ name, type, balance, icon: WALLET_TYPES[type].icon });
         Modal.close();
         Router.handleRoute();
-        Toast.show(`${WALLET_TYPES[type].icon} ${name} ditambahkan!`, 'success');
+        Toast.show(`${name} ditambahkan!`, 'success');
       });
     }
   });
@@ -165,7 +181,7 @@ function openTransferForm() {
       <input type="text" id="tf-amount" placeholder="Rp 0" inputmode="numeric" style="font-family:var(--font-mono);">
     </div>
   `, {
-    footerHtml: `<button class="btn btn--primary btn--full" id="tf-save">${Icons.transfer} Transfer</button>`,
+    footerHtml: `<button class="btn btn--primary btn--full" id="tf-save">${mIcon('sync_alt')} Transfer</button>`,
     onOpen(overlay) {
       overlay.querySelector('#tf-amount').addEventListener('input', (e) => {
         const v = Utils.parseRupiah(e.target.value);

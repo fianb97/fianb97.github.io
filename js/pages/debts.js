@@ -1,9 +1,9 @@
 // ========================================
-// MyWallet — Debts Page
+// MyWallet — Debts Page (Verdant Glass)
 // ========================================
 
 function renderDebts(container) {
-  let activeTab = 'debt'; // 'debt' | 'receivable'
+  let activeTab = 'receivable'; // 'receivable' | 'debt'
   let showPaid = false;
 
   function render() {
@@ -13,70 +13,109 @@ function renderDebts(container) {
     const net = totalReceivable - totalDebt;
 
     container.innerHTML = `
-      <!-- Summary -->
-      <div class="stat-row section" style="animation:fadeInUp .5s var(--ease-out)">
-        <div class="stat-item">
-          <div class="stat-item__label">Total Hutang</div>
-          <div class="stat-item__value text-debt mono">-${Utils.formatRupiah(totalDebt)}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-item__label">Total Piutang</div>
-          <div class="stat-item__value text-credit mono">+${Utils.formatRupiah(totalReceivable)}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-item__label">Selisih Bersih</div>
-          <div class="stat-item__value mono" style="color:${net >= 0 ? 'var(--color-credit)' : 'var(--color-debt)'}">
-            ${Utils.formatRupiah(net, true)}
+      <!-- Header Section -->
+      <div class="page-header" style="animation:fadeInUp .35s var(--ease-out)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 class="page-header__title">${t('debtsTitle')}</h2>
+            <p class="page-header__subtitle">${t('debtsSubtitle')}</p>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn--secondary" id="transfer-btn">${mIcon('sync_alt')} ${t('transfer')}</button>
+            <button class="btn btn--primary" id="add-debt-btn">${mIcon('add')} ${t('addRecord')}</button>
           </div>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:var(--space-lg);flex-wrap:wrap;animation:fadeInUp .6s var(--ease-out)">
-        <div class="tab-switcher" style="flex:1;max-width:300px;" id="debt-tabs">
-          <button class="tab-switcher__tab ${activeTab === 'debt' ? 'active' : ''}" data-tab="debt">Hutang</button>
-          <button class="tab-switcher__tab ${activeTab === 'receivable' ? 'active' : ''}" data-tab="receivable">Piutang</button>
+      <!-- Bento Summary Grid -->
+      <div class="grid-2 section" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;animation:fadeInUp .4s var(--ease-out)">
+        <!-- Total Piutang -->
+        <div class="card" style="border-radius:24px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;color:var(--on-surface-variant);font-size:11px;font-weight:700;letter-spacing:0.05em;margin-bottom:12px;">
+            <span style="color:var(--color-income);">${mIcon('call_received')}</span> ${t('totalReceivablesCard')}
+          </div>
+          <div class="mono" style="font-size:28px;font-weight:700;color:var(--color-income);">${Utils.formatRupiah(totalReceivable)}</div>
+          <div style="font-size:13px;color:var(--on-surface-variant);margin-top:16px;">${Store.getDebts({ type: 'receivable', isPaid: false }).length} ${t('activeStatus')}</div>
+        </div>
+
+        <!-- Total Hutang -->
+        <div class="card" style="border-radius:24px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;color:var(--on-surface-variant);font-size:11px;font-weight:700;letter-spacing:0.05em;margin-bottom:12px;">
+            <span style="color:var(--color-expense);">${mIcon('call_made')}</span> ${t('totalDebtsCard')}
+          </div>
+          <div class="mono text-expense" style="font-size:28px;font-weight:700;">${Utils.formatRupiah(totalDebt)}</div>
+          <div style="font-size:13px;color:var(--on-surface-variant);margin-top:16px;">${Store.getDebts({ type: 'debt', isPaid: false }).length} ${t('activeStatus')}</div>
+        </div>
+
+        <!-- Selisih Bersih -->
+        <div class="card" style="border-radius:24px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;color:var(--on-surface-variant);font-size:11px;font-weight:700;letter-spacing:0.05em;margin-bottom:12px;">
+            <span style="color:var(--color-income);">${mIcon('balance')}</span> ${t('netDifferenceCard')}
+          </div>
+          <div class="mono" style="font-size:28px;font-weight:700;color:${net >= 0 ? 'var(--color-income)' : 'var(--color-expense)'};">
+            ${Utils.formatRupiah(net, true)}
+          </div>
+          <div style="font-size:13px;color:var(--on-surface-variant);margin-top:16px;">${net >= 0 ? 'Surplus saldo' : 'Defisit saldo'}</div>
+        </div>
+      </div>
+
+      <!-- Debts Tabs -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;animation:fadeInUp .45s var(--ease-out);">
+        <div class="debts-tabs" style="margin-bottom:0;">
+          <button class="debts-tabs__tab ${activeTab === 'receivable' ? 'active' : ''}" data-tab="receivable">Piutang</button>
+          <button class="debts-tabs__tab ${activeTab === 'debt' ? 'active' : ''}" data-tab="debt">Hutang</button>
         </div>
         <button class="btn btn--sm ${showPaid ? 'btn--primary' : 'btn--secondary'}" id="toggle-paid">
-          ${showPaid ? '✅ Riwayat Lunas' : '📋 Aktif'}
+          ${showPaid ? `${mIcon('check_circle')} Lunas` : `${mIcon('pending')} Aktif`}
         </button>
-        <button class="btn btn--primary btn--sm" id="add-debt-btn">${Icons.plus} Catat ${activeTab === 'debt' ? 'Hutang' : 'Piutang'}</button>
       </div>
 
       <!-- List -->
-      <div class="card" style="animation:fadeInUp .7s var(--ease-out)">
+      <div class="section" style="animation:fadeInUp .5s var(--ease-out)">
         ${debts.length === 0 ? `
-          <div class="empty-state">
-            <div class="empty-state__icon">${showPaid ? '✅' : '🤝'}</div>
-            <div class="empty-state__title">${showPaid ? 'Belum ada riwayat lunas' : `Tidak ada ${activeTab === 'debt' ? 'hutang' : 'piutang'} aktif`}</div>
-            <div class="empty-state__desc">${showPaid ? '' : 'Tekan tombol + untuk mencatat'}</div>
+          <div class="glass-panel" style="border-radius:24px;padding:60px 24px;text-align:center;max-width:600px;margin:0 auto;">
+            <div style="width:80px;height:80px;border-radius:50%;background:rgba(0,69,13,0.05);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <span style="font-size:40px;color:rgba(0,69,13,0.4);">${mIcon('handshake')}</span>
+            </div>
+            <h3 style="font-size:18px;font-weight:600;color:var(--on-surface);margin-bottom:4px;">
+              ${showPaid ? 'Belum ada riwayat lunas' : `Tidak ada ${activeTab === 'debt' ? 'hutang' : 'piutang'} aktif`}
+            </h3>
+            <p style="font-size:14px;color:var(--on-surface-variant);">
+              ${showPaid ? '' : 'Tekan tombol + untuk mencatat baru.'}
+            </p>
           </div>
         ` : `
           <div style="display:flex;flex-direction:column;gap:12px;">
             ${debts.map(d => {
               const w = Store.getWallet(d.walletId);
               const initial = d.personName.charAt(0).toUpperCase();
-              const colorClass = d.type === 'debt' ? 'text-debt' : 'text-credit';
-              const sign = d.type === 'debt' ? '-' : '+';
+              const isReceivable = d.type === 'receivable';
+              const colorClass = isReceivable ? 'text-income' : 'text-expense';
+              const sign = isReceivable ? '+' : '-';
+              const avatarBg = isReceivable ? 'var(--primary)' : 'var(--error)';
 
               return `
-                <div class="debt-row" data-debt-id="${d.id}">
-                  <div class="debt-row__avatar">${initial}</div>
-                  <div class="debt-row__info">
-                    <div class="debt-row__name">${Utils.escapeHtml(d.personName)}</div>
-                    <div class="debt-row__detail">
-                      ${Utils.formatDate(d.date)} • ${w ? w.name : '—'}
-                      ${d.note ? ' • ' + Utils.escapeHtml(d.note) : ''}
-                      ${d.isPaid ? ' • ✅ Lunas ' + Utils.formatDate(d.paidDate) : ''}
+                <div class="debt-item" data-debt-id="${d.id}">
+                  <div class="debt-item__left">
+                    <div class="debt-item__avatar" style="background:${avatarBg};">${initial}</div>
+                    <div class="debt-item__info">
+                      <span class="debt-item__name">${Utils.escapeHtml(d.personName)}</span>
+                      <span class="debt-item__desc">
+                        ${Utils.formatDate(d.date)} • ${w ? w.name : '—'}
+                        ${d.note ? ' • ' + Utils.escapeHtml(d.note) : ''}
+                        ${d.isPaid ? ' • ✅ Lunas ' + Utils.formatDate(d.paidDate) : ''}
+                      </span>
                     </div>
+                  </div>
+                  <div class="debt-item__right">
+                    <span class="debt-item__amount ${colorClass} mono">${sign}${Utils.formatRupiah(d.amount)}</span>
                     ${!d.isPaid ? `
-                      <div class="debt-row__actions">
-                        <button class="btn btn--sm btn--primary mark-paid-btn" data-id="${d.id}">✅ Tandai Lunas</button>
-                        <button class="btn btn--sm btn--danger del-debt-btn" data-id="${d.id}">🗑️</button>
+                      <div style="display:flex;gap:4px;margin-top:4px;">
+                        <button class="btn btn--sm btn--primary mark-paid-btn" data-id="${d.id}" style="padding:4px 8px;font-size:11px;">${mIcon('check')} Lunas</button>
+                        <button class="btn btn--sm btn--danger del-debt-btn" data-id="${d.id}" style="padding:4px 8px;font-size:11px;">${mIcon('delete')}</button>
                       </div>
                     ` : ''}
                   </div>
-                  <div class="debt-row__amount ${colorClass} mono">${sign}${Utils.formatRupiah(d.amount)}</div>
                 </div>
               `;
             }).join('')}
@@ -86,12 +125,15 @@ function renderDebts(container) {
     `;
 
     // Tab events
-    container.querySelectorAll('#debt-tabs .tab-switcher__tab').forEach(tab => {
+    container.querySelectorAll('.debts-tabs__tab').forEach(tab => {
       tab.addEventListener('click', () => { activeTab = tab.dataset.tab; render(); });
     });
 
     container.querySelector('#toggle-paid').addEventListener('click', () => { showPaid = !showPaid; render(); });
     container.querySelector('#add-debt-btn').addEventListener('click', () => openDebtForm(activeTab));
+    if (container.querySelector('#transfer-btn')) {
+      container.querySelector('#transfer-btn').addEventListener('click', () => openTransferForm());
+    }
 
     // Mark paid
     container.querySelectorAll('.mark-paid-btn').forEach(btn => {

@@ -11,6 +11,7 @@ const Store = {
       wallets: [],
       transactions: [],
       debts: [],
+      customCategories: [],
       settings: { setupComplete: false, currency: 'IDR' }
     };
   },
@@ -21,8 +22,30 @@ const Store = {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Merge with defaults to handle new fields
-        return { ...this.defaultState(), ...parsed };
+        const state = { ...this.defaultState(), ...parsed };
+        // Sync language setting to I18n
+        if (state.settings && state.settings.lang) {
+          I18n.currentLang = state.settings.lang;
+        }
+        // Sync theme setting to DOM
+        if (state.settings && state.settings.theme) {
+          document.documentElement.setAttribute('data-theme', state.settings.theme);
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+        // Sync custom categories to memory
+        if (state.customCategories && Array.isArray(state.customCategories)) {
+          state.customCategories.forEach(c => {
+            CATEGORIES[c.key] = {
+              name: c.name,
+              icon: mIcon(c.iconName || 'label'),
+              color: c.color || 'var(--mint-accent)',
+              type: c.type,
+              isCustom: true
+            };
+          });
+        }
+        return state;
       }
     } catch (e) {
       console.error('Store load error:', e);
@@ -352,6 +375,20 @@ const Store = {
     return this.load().settings.setupComplete;
   },
 
+  getLanguage() {
+    return this.load().settings.lang || 'id';
+  },
+
+  setLanguage(lang) {
+    const state = this.load();
+    if (!state.settings) state.settings = {};
+    state.settings.lang = lang;
+    this.save(state);
+    if (typeof I18n !== 'undefined') {
+      I18n.currentLang = lang;
+    }
+  },
+
   // Transfer between wallets
   transfer(fromId, toId, amount) {
     const state = this.load();
@@ -363,6 +400,55 @@ const Store = {
     state.wallets[toIdx].balance += amount;
     this.save(state);
     return true;
+  },
+
+  // ── Custom Category Operations ──
+  addCustomCategory(cat) {
+    const state = this.load();
+    if (!state.customCategories) state.customCategories = [];
+    const key = 'custom_' + Utils.id();
+    const newCat = {
+      key,
+      name: cat.name,
+      type: cat.type, // 'expense' | 'income'
+      iconName: cat.iconName || 'label',
+      color: cat.color || 'var(--mint-accent)',
+      createdAt: Date.now()
+    };
+    state.customCategories.push(newCat);
+    this.save(state);
+
+    // Register in memory
+    CATEGORIES[key] = {
+      name: newCat.name,
+      icon: mIcon(newCat.iconName),
+      color: newCat.color,
+      type: newCat.type,
+      isCustom: true
+    };
+    return newCat;
+  },
+
+  deleteCustomCategory(key) {
+    const state = this.load();
+    if (state.customCategories) {
+      state.customCategories = state.customCategories.filter(c => c.key !== key);
+      this.save(state);
+    }
+    delete CATEGORIES[key];
+  },
+
+  getTheme() {
+    const state = this.load();
+    return (state.settings && state.settings.theme) || 'light';
+  },
+
+  setTheme(theme) {
+    const state = this.load();
+    state.settings = state.settings || {};
+    state.settings.theme = theme;
+    this.save(state);
+    document.documentElement.setAttribute('data-theme', theme);
   },
 
   // Export all data as JSON

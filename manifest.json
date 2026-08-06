@@ -4,8 +4,8 @@
   "description": "Aplikasi manajemen keuangan pribadi yang modern dan aman.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#080816",
-  "theme_color": "#080816",
+  "background_color": "#F5FAF6",
+  "theme_color": "#155E2B",
   "icons": [
     {
       "src": "icon.svg",

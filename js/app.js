@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initApp() {
+  // Ensure stored settings (language & theme) are initialized
+  Store.load();
+
   // Build app shell
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -26,31 +29,55 @@ function initApp() {
   Router.register('wallets', renderWallets);
   Router.register('debts', renderDebts);
   Router.register('ai', renderAI);
+  Router.register('settings', renderSettings);
 
-  // Mobile sidebar toggle
-  const menuBtn = document.getElementById('menu-btn');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
+  function bindAppEvents() {
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
 
-  function closeSidebar() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('visible');
-  }
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('visible');
+    }
 
-  if (menuBtn) {
-    menuBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('visible');
+    if (menuBtn) {
+      menuBtn.onclick = () => {
+        if (sidebar) sidebar.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('visible');
+      };
+    }
+    if (overlay) {
+      overlay.onclick = closeSidebar;
+    }
+
+    document.querySelectorAll('.sidebar__link').forEach(link => {
+      link.onclick = closeSidebar;
     });
-  }
-  if (overlay) {
-    overlay.addEventListener('click', closeSidebar);
+
+    const langBtn = document.getElementById('lang-toggle-btn');
+    if (langBtn) {
+      langBtn.onclick = () => {
+        const curLang = I18n.getLang();
+        const newLang = curLang === 'id' ? 'en' : 'id';
+        Store.setLanguage(newLang);
+
+        const sidebarElem = document.getElementById('sidebar');
+        const headerElem = document.getElementById('header');
+        const bottomNavElem = document.getElementById('bottom-nav');
+
+        if (sidebarElem) sidebarElem.outerHTML = renderSidebar();
+        if (headerElem) headerElem.outerHTML = renderHeader();
+        if (bottomNavElem) bottomNavElem.outerHTML = renderBottomNav();
+
+        bindAppEvents();
+        Router.handleRoute();
+        Toast.show(newLang === 'id' ? 'Bahasa diubah ke Bahasa Indonesia 🇮🇩' : 'Language changed to English 🇬🇧', 'success');
+      };
+    }
   }
 
-  // Close sidebar on nav click (mobile)
-  document.querySelectorAll('.sidebar__link').forEach(link => {
-    link.addEventListener('click', closeSidebar);
-  });
+  bindAppEvents();
 
   // FAB
   const fab = document.getElementById('fab-btn');

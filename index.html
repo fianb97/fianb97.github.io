@@ -2,9 +2,9 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="MyWallet — Aplikasi manajemen keuangan pribadi dengan multi-wallet, pencatatan transaksi, hutang-piutang, dan AI assistant.">
-  <meta name="theme-color" content="#080816">
+  <meta name="theme-color" content="#00450d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -13,7 +13,9 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/variables.css">
@@ -30,8 +32,9 @@
 <body>
   <div id="app"></div>
 
-  <!-- Scripts (order matters: utils, store, router, components, pages, app) -->
+  <!-- Scripts (order matters: utils, i18n, store, router, components, pages, app) -->
   <script src="js/utils.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/store.js"></script>
   <script src="js/router.js"></script>
   <script src="js/components.js"></script>
@@ -40,6 +43,7 @@
   <script src="js/pages/wallets.js"></script>
   <script src="js/pages/debts.js"></script>
   <script src="js/pages/ai-assistant.js"></script>
+  <script src="js/pages/settings.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

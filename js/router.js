@@ -50,14 +50,15 @@ const Router = {
   // Update header title
   updateHeaderTitle(hash) {
     const titles = {
-      dashboard: Icons.dashboard + ' <span>Dashboard</span>',
-      transactions: Icons.transactions + ' <span>Transaksi</span>',
-      wallets: Icons.wallet + ' <span>Dompet</span>',
-      debts: Icons.debt + ' <span>Hutang & Piutang</span>',
-      ai: Icons.ai + ' <span>AI Assistant</span>'
+      dashboard: mIcon('dashboard') + ` <span>${t('dashboard')}</span>`,
+      transactions: mIcon('receipt_long') + ` <span>${t('activity')}</span>`,
+      wallets: mIcon('account_balance_wallet') + ` <span>${t('wallets')}</span>`,
+      debts: mIcon('handshake') + ` <span>${t('debts')}</span>`,
+      ai: mIcon('smart_toy') + ` <span>${t('assistant')}</span>`,
+      settings: mIcon('settings') + ` <span>${t('settings')}</span>`
     };
     const el = document.getElementById('header-title');
-    if (el) el.innerHTML = titles[hash] || 'MyWallet';
+    if (el) el.innerHTML = titles[hash] || `<span>MyWallet</span>`;
   },
 
   // Initialize

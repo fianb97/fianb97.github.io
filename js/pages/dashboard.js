@@ -1,5 +1,5 @@
 // ========================================
-// MyWallet — Dashboard Page
+// MyWallet — Dashboard Page (Verdant Glass)
 // ========================================
 
 function renderDashboard(container) {
@@ -13,36 +13,22 @@ function renderDashboard(container) {
   const netDebtBalance = totalReceivable - totalDebt;
   const adjustedBalance = totalBalance + netDebtBalance;
 
-  // Default period
-  let expensePeriod = 'monthly';
-
-  function getPeriodLabel(period) {
-    if (period === 'daily') return 'Hari Ini';
-    if (period === 'weekly') return 'Minggu Ini';
-    return Utils.currentMonthLabel();
-  }
-
   function renderExpenseCard() {
-    const expByCategory = Store.getExpenseByCategoryPeriod(expensePeriod);
+    const expByCategory = Store.getExpenseByCategoryPeriod('daily');
     return `
       <div class="card__header" style="flex-wrap:wrap;gap:8px;">
-        <span class="card__title">Pengeluaran ${getPeriodLabel(expensePeriod)}</span>
-      </div>
-      <div class="tab-switcher" id="expense-period-tabs" style="margin-bottom:var(--space-base);">
-        <button class="tab-switcher__tab ${expensePeriod === 'daily' ? 'active' : ''}" data-period="daily">Harian</button>
-        <button class="tab-switcher__tab ${expensePeriod === 'weekly' ? 'active' : ''}" data-period="weekly">Mingguan</button>
-        <button class="tab-switcher__tab ${expensePeriod === 'monthly' ? 'active' : ''}" data-period="monthly">Bulanan</button>
+        <span class="card__title">${mIcon('pie_chart')} ${t('expenseDistribution')} (${t('today')})</span>
       </div>
       <div class="expense-chart-wrap">
         <canvas id="expense-chart"></canvas>
       </div>
-      ${expByCategory.length === 0 ? '<p style="text-align:center;margin-top:12px;">Belum ada data pengeluaran</p>' : `
+      ${expByCategory.length === 0 ? `<p style="text-align:center;margin-top:12px;color:var(--on-surface-variant);">${t('noExpensesYet')}</p>` : `
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
           ${expByCategory.slice(0, 5).map(d => {
-            const cat = CATEGORIES[d.category] || { name: d.category, icon: '📌' };
+            const cat = CATEGORIES[d.category] || { name: d.category, icon: mIcon('label'), color: '#888' };
             return `<div style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);">
-              <span>${cat.icon}</span>
-              <span style="flex:1;color:var(--text-secondary);">${cat.name}</span>
+              <span style="color:${cat.color};">${cat.icon}</span>
+              <span style="flex:1;color:var(--on-surface-variant);">${cat.name}</span>
               <span class="mono" style="font-weight:600;">${Utils.formatRupiah(d.amount)}</span>
             </div>`;
           }).join('')}
@@ -52,147 +38,130 @@ function renderDashboard(container) {
   }
 
   container.innerHTML = `
-    <!-- Hero Balance Card -->
+    <!-- Hero Balance Card (Gradient Green) -->
     <div class="card card--hero section" id="balance-hero" style="animation: fadeInUp 0.5s var(--ease-out)">
-      <div class="card__title">Total Saldo</div>
-      <div class="card__value mono">${Utils.formatRupiah(totalBalance)}</div>
-      <div class="card__subtitle" style="display:flex;gap:24px;margin-top:12px;">
-        <span style="display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;color:rgba(255,255,255,0.9)">${Icons.arrowUp}</span>
-          Pemasukan: ${Utils.formatShort(monthlyIncome)}
-        </span>
-        <span style="display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;color:rgba(255,255,255,0.9)">${Icons.arrowDown}</span>
-          Pengeluaran: ${Utils.formatShort(monthlyExpense)}
-        </span>
+      <div class="card__title">${t('totalBalance')}</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px;">
+        <span class="mono" style="font-size:24px;color:#ffffff;">Rp</span>
+        <div class="card__value mono">${new Intl.NumberFormat('id-ID').format(Math.abs(totalBalance))}</div>
       </div>
-    </div>
-
-    <!-- Debt/Credit Summary (below Total Saldo) -->
-    <div class="card section" style="animation: fadeInUp 0.55s var(--ease-out)">
-      <div class="card__header">
-        <span class="card__title">Hutang & Piutang</span>
-        <a href="#debts" class="section__action">Detail</a>
-      </div>
-      <div style="display:flex;gap:12px;margin-bottom:12px;">
-        <div style="flex:1;text-align:center;padding:10px 8px;border-radius:var(--radius-sm);background:var(--color-debt-bg);">
-          <div style="font-size:var(--fs-xs);color:var(--color-debt);margin-bottom:4px;">Hutang</div>
-          <div class="mono" style="font-weight:600;color:var(--color-debt);">-${Utils.formatShort(totalDebt)}</div>
+      <div class="flow-row">
+        <div class="flow-row__item">
+          ${mIcon('arrow_upward')}
+          <span>${t('income')}:<br>${Utils.formatShort(monthlyIncome)}</span>
         </div>
-        <div style="flex:1;text-align:center;padding:10px 8px;border-radius:var(--radius-sm);background:var(--color-credit-bg);">
-          <div style="font-size:var(--fs-xs);color:var(--color-credit);margin-bottom:4px;">Piutang</div>
-          <div class="mono" style="font-weight:600;color:var(--color-credit);">+${Utils.formatShort(totalReceivable)}</div>
-        </div>
-      </div>
-      <div style="text-align:center;padding:10px;border-radius:var(--radius-sm);background:var(--bg-glass);border:1px solid var(--border-glass);">
-        <div style="font-size:var(--fs-xs);color:var(--text-muted);margin-bottom:4px;">Total Saldo (setelah hutang/piutang)</div>
-        <div class="mono" style="font-weight:700;font-size:var(--fs-lg);color:${adjustedBalance >= 0 ? 'var(--color-income)' : 'var(--color-expense)'};">
-          ${Utils.formatRupiah(adjustedBalance)}
+        <div class="flow-row__item">
+          ${mIcon('arrow_downward')}
+          <span>${t('expense')}:<br>${Utils.formatShort(monthlyExpense)}</span>
         </div>
       </div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="grid-2 section" style="animation: fadeInUp 0.6s var(--ease-out)">
-      <!-- Expense Chart -->
-      <div class="card" id="expense-card-container">
-        ${renderExpenseCard()}
+    <!-- Adjusted Balance (Glass Card) -->
+    <div class="card card--adjusted section" style="animation: fadeInUp 0.55s var(--ease-out)">
+      <div class="card__title">${mIcon('account_balance')} ${t('adjustedBalance')}</div>
+      <div style="display:flex;align-items:baseline;gap:4px;">
+        <span class="mono" style="color:var(--primary);font-size:14px;">Rp</span>
+        <div class="card__value">${new Intl.NumberFormat('id-ID').format(Math.abs(adjustedBalance))}</div>
       </div>
-
-      <!-- Wallet Breakdown -->
-      <div class="card">
-        <div class="card__header">
-          <span class="card__title">Saldo Dompet</span>
-          <a href="#wallets" class="section__action">Lihat Semua</a>
+      <div class="adjusted-sub">
+        <div class="adjusted-sub__item">
+          <span class="adjusted-sub__label">${t('debtsLabel')}</span>
+          <span class="mono text-expense" style="font-weight:500;">- ${Utils.formatShort(totalDebt)}</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${wallets.length === 0 ? '<p class="text-muted">Belum ada dompet</p>' : wallets.map(w => `
-            <div class="wallet-chip">
-              <span class="wallet-chip__icon">${getWalletIcon(w)}</span>
-              <span class="wallet-chip__name">${Utils.escapeHtml(w.name)}</span>
-              <span class="wallet-chip__balance mono">${Utils.formatRupiah(w.balance)}</span>
+        <div class="adjusted-sub__item">
+          <span class="adjusted-sub__label">${t('receivablesLabel')}</span>
+          <span class="mono text-income" style="font-weight:500;">+ ${Utils.formatShort(totalReceivable)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense Distribution -->
+    <div class="card section" id="expense-card-container" style="animation: fadeInUp 0.6s var(--ease-out)">
+      ${renderExpenseCard()}
+    </div>
+
+    <!-- Active Wallets (Horizontal Scroll) -->
+    <div class="section" style="animation: fadeInUp 0.65s var(--ease-out)">
+      <div class="section__header">
+        <h3 class="section__title">${t('activeWallets')}</h3>
+        <a href="#wallets" class="section__action">${t('viewAll')}</a>
+      </div>
+      <div class="wallets-scroll">
+        ${wallets.length === 0 ? `<p style="color:var(--on-surface-variant);padding:20px;">${t('noWalletsYet')}</p>` : wallets.map(w => {
+          const typeLabel = (WALLET_TYPES[w.type] || { name: 'Other' }).name;
+          return `
+            <div class="wallet-scroll-card">
+              <div class="wallet-scroll-card__top">
+                <div class="wallet-scroll-card__icon">${getWalletIcon(w)}</div>
+                <span class="wallet-scroll-card__badge">${typeLabel}</span>
+              </div>
+              <div>
+                <div class="wallet-scroll-card__name">${Utils.escapeHtml(w.name)}</div>
+                <div class="wallet-scroll-card__balance">${Utils.formatRupiah(w.balance)}</div>
+              </div>
             </div>
-          `).join('')}
-        </div>
+          `;
+        }).join('')}
       </div>
     </div>
 
-    <!-- Recent Transactions -->
+    <!-- Recent Activity -->
     <div class="card section" style="animation: fadeInUp 0.7s var(--ease-out)">
       <div class="card__header">
-        <span class="card__title">Transaksi Terakhir</span>
-        <a href="#transactions" class="section__action">Lihat Semua</a>
+        <span class="card__title">${mIcon('history')} ${t('recentActivity')}</span>
+        <a href="#transactions" class="section__action">${t('seeAll')}</a>
       </div>
       <div id="recent-tx-list">
         ${recentTx.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">📝</div>
-            <div class="empty-state__title">Belum Ada Transaksi</div>
-            <div class="empty-state__desc">Tekan tombol + untuk mencatat transaksi pertamamu</div>
+            <div class="empty-state__icon">${mIcon('edit_note')}</div>
+            <div class="empty-state__title">${t('noTxYet')}</div>
+            <div class="empty-state__desc">${t('noTxDesc')}</div>
           </div>
         ` : recentTx.map(tx => renderTxRow(tx)).join('')}
       </div>
     </div>
   `;
 
-  // Draw chart for initial period
-  const expByCategory = Store.getExpenseByCategoryPeriod(expensePeriod);
+  // Draw chart for daily expenses
+  const expByCategory = Store.getExpenseByCategoryPeriod('daily');
   if (expByCategory.length > 0) {
     drawExpenseChart(expByCategory);
   }
-
-  // Bind period tab events
-  function bindPeriodTabs() {
-    const cardContainer = container.querySelector('#expense-card-container');
-    if (!cardContainer) return;
-    cardContainer.querySelectorAll('#expense-period-tabs .tab-switcher__tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        expensePeriod = tab.dataset.period;
-        cardContainer.innerHTML = renderExpenseCard();
-        const data = Store.getExpenseByCategoryPeriod(expensePeriod);
-        if (data.length > 0) {
-          drawExpenseChart(data);
-        }
-        bindPeriodTabs(); // Rebind after re-render
-      });
-    });
-  }
-  bindPeriodTabs();
 }
 
 function renderTxRow(tx) {
-  const cat = CATEGORIES[tx.category] || { name: tx.category, icon: '📌', color: '#888' };
+  const cat = CATEGORIES[tx.category] || { name: tx.category, icon: mIcon('label'), color: '#888' };
   const wallet = Store.getWallet(tx.walletId);
   const walletName = wallet ? wallet.name : '—';
-  const sign = tx.type === 'income' ? '+' : '-';
-  const cls = tx.type === 'income' ? 'income' : 'expense';
+  const isIncome = tx.type === 'income';
+  const iconClass = isIncome ? 'tx-item__icon--income' : 'tx-item__icon--expense';
+  const amountClass = isIncome ? 'text-income' : 'text-expense';
+  const sign = isIncome ? '+' : '-';
 
   return `
-    <div class="tx-row" data-tx-id="${tx.id}">
-      <div class="tx-row__icon" style="background:${cat.color}22;color:${cat.color};">
-        ${cat.icon}
-      </div>
-      <div class="tx-row__info">
-        <div class="tx-row__name">${tx.note ? Utils.escapeHtml(tx.note) : cat.name}</div>
-        <div class="tx-row__meta">
-          <span>${walletName}</span>
-          <span>•</span>
-          <span>${Utils.formatRelativeDate(tx.date)}</span>
+    <div class="tx-item" data-tx-id="${tx.id}">
+      <div class="tx-item__left">
+        <div class="tx-item__icon ${iconClass}">${cat.icon}</div>
+        <div class="tx-item__info">
+          <span class="tx-item__name">${tx.note ? Utils.escapeHtml(tx.note) : cat.name}</span>
+          <span class="tx-item__meta">${walletName} • ${Utils.formatRelativeDate(tx.date)}</span>
         </div>
       </div>
-      <div class="tx-row__amount ${cls} mono">${sign}${Utils.formatRupiah(tx.amount)}</div>
+      <span class="tx-item__amount ${amountClass} mono">${sign}${new Intl.NumberFormat('id-ID').format(tx.amount)}</span>
     </div>
   `;
 }
 
-function drawExpenseChart(data) {
-  const canvas = document.getElementById('expense-chart');
+function drawExpenseChart(data, targetCanvas = null) {
+  const canvas = targetCanvas || document.getElementById('expense-chart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   // Get the container's actual width for responsive sizing
-  const container = canvas.parentElement;
-  const size = Math.min(container.clientWidth, 220);
+  const chartContainer = canvas.parentElement;
+  const size = Math.min(chartContainer.clientWidth, 220);
 
   // Colors for chart
   const colors = data.map(d => {
@@ -232,15 +201,16 @@ function drawExpenseChart(data) {
     startAngle = endAngle;
   });
 
-  // Center text — scale font size with chart
+  // Center text
   const mainFontSize = Math.max(12, size * 0.073);
   const subFontSize = Math.max(9, size * 0.05);
-  ctx.fillStyle = '#f0f0f5';
-  ctx.font = `bold ${mainFontSize}px Inter, sans-serif`;
+
+  ctx.fillStyle = '#00450d';
+  ctx.font = `bold ${mainFontSize}px 'JetBrains Mono', monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(Utils.formatShort(total), cx, cy - (size * 0.036));
   ctx.font = `${subFontSize}px Inter, sans-serif`;
-  ctx.fillStyle = '#9090b0';
+  ctx.fillStyle = '#41493e';
   ctx.fillText('Total', cx, cy + (size * 0.045));
 }
